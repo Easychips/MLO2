@@ -1,7 +1,9 @@
-#include "PrismaUI_API.h"
-#include <keyhandler/keyhandler.h>
+//#include "PrismaUI_API.h"
+//#include <keyhandler/keyhandler.h>
+#include "hooks.h"
+#include "Functions.h"
 
-PRISMA_UI_API::IVPrismaUI1* PrismaUI;
+/*PRISMA_UI_API::IVPrismaUI1* PrismaUI;
 
 static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
 {
@@ -49,25 +51,30 @@ static void SKSEMessageHandler(SKSE::MessagingInterface::Message* message)
         // keyHandler->Unregister(toggleEventHandler);
         break;
     }
-}
+} */ 
 
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
     REL::Module::reset();
 
-    auto g_messaging = reinterpret_cast<SKSE::MessagingInterface*>(a_skse->QueryInterface(SKSE::LoadInterface::kMessaging));
+        SKSE::GetMessagingInterface()->RegisterListener(
+            [](SKSE::MessagingInterface::Message* message) {
 
-    if (!g_messaging) {
-        logger::critical("Failed to load messaging interface! This error is fatal, plugin will not load.");
-        return false;
-    }
+                if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+
+                    logger::info("kdata is loaded attempting to initialise and install");
+                    Initialize();
+                    Hooks::Install(); 
+                    IniParser();
+                    assignClonedNodes();
+                }
+                       
+            });
 
     logger::info("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
     SKSE::Init(a_skse);
     SKSE::AllocTrampoline(1 << 10);
-
-    g_messaging->RegisterListener("SKSE", SKSEMessageHandler);
 
     return true;
 }

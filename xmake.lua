@@ -3,7 +3,7 @@
 set_xmakever("2.8.2")
 includes("lib/commonlibsse-ng")
 
-set_project("MLOMLO")
+set_project("MLO2")
 set_version("1.0.0")
 set_license("GPL-3.0")
 
@@ -35,7 +35,7 @@ if has_config("skyrim_vr") and (has_config("skyrim_se") or has_config("skyrim_ae
     raise("Cannot combine Skyrim VR with SE/AE builds. Enable only one configuration.")
 end
 
-target("MLOMLO")
+target("MLO2")
     add_deps("commonlibsse-ng")
 
     local runtime = "se_ae"
@@ -48,9 +48,9 @@ target("MLOMLO")
     end
 
     add_rules("commonlibsse-ng.plugin", {
-        name        = "MLOMLO",
+        name        = "MLO2",
         author      = "Truman",
-        description = "MLO Patchless attempt",
+        description = "MLO dll",
         runtime     = runtime
     })
 
