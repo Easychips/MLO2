@@ -12,7 +12,7 @@ namespace logger = SKSE::log;
 
  inline void Initialize() {
      logger::info("loading forms");
-    auto dataHandler = RE::TESDataHandler::GetSingleton(); // single instance
+    auto dataHandler = RE::TESDataHandler::GetSingleton(); 
 
     keywordForswornCamp = dataHandler->LookupForm<RE::BGSKeyword>(0x000130EE, "Skyrim.esm");
     if (!keywordForswornCamp) {
@@ -63,7 +63,6 @@ RE::NiPointer<RE::NiNode> loaded;
                 if (desiredNode) {
                     auto tempPrototype = desiredNode->AsNode();
                     if (tempPrototype) {
-                        // Clone it immediately while we know it's valid
                         RE::NiCloningProcess cloningProcess{};
                         auto cloneBase = tempPrototype->CreateClone(cloningProcess);
                         if (cloneBase) {
@@ -101,7 +100,6 @@ RE::NiPointer<RE::NiNode> loaded;
             logger::warn("Failed to load NIF file");
             return nullptr; 
         }
-       
     }
 
 inline void assignClonedNodes() {
@@ -135,16 +133,12 @@ inline void assignClonedNodes() {
         }
 
         nodePtr = clonedNode;  // store one copy for the group
-
         templateFilePathIterator++;
     }
-
     logger::info("Finished assignClonedNodes");
 }
 
-
-// this is only if we need to overwrite 6 bits of memory instead of the default 5.... currently not used.
-
+// this is only if we need to overwrite 6 bits of memory instead of the default 5.... currently not used ive tried so many hooks xD 
 template <class T, std::size_t size = 5>  
 inline void write_thunk_call(std::uintptr_t a_src) {
     auto& trampoline = SKSE::GetTrampoline();
@@ -154,7 +148,6 @@ inline void write_thunk_call(std::uintptr_t a_src) {
         T::func = trampoline.write_call<size>(a_src, T::thunk);
     }
 }
-
 
 // makes sure were not disabling dynamically spawned lights for quests like the moondial light in volkihar courtyard in DLC1 
 // or whitelisted lights by checking the plugin name or carryable or shadowcasters lol
@@ -190,7 +183,7 @@ inline bool should_disable_light(RE::TESObjectLIGH* light, RE::TESObjectREFR* re
 
     return true;
 }
-
+// heres where we attach the node failed becasue get3d isent ready in the latest hook clone3d()
 inline void AttachNodeToReference(RE::TESObjectREFR* ref, RE::NiNode* nodeToAttach) {
     if (!ref) {
         logger::info("AttachNodeToReference: ref is null");
@@ -219,8 +212,6 @@ inline void AttachNodeToReference(RE::TESObjectREFR* ref, RE::NiNode* nodeToAtta
 
 // this is the core of the mod where we change meshes by adding glow nodes from nidify templates or swap fire colors based on players current location
 
-// method to swap fire color models
-
 inline void ProcessReference(RE::TESObjectREFR* a_ref) {
     const auto refid = a_ref->GetFormID();
     const auto base = a_ref->GetBaseObject();
@@ -242,14 +233,14 @@ inline void ProcessReference(RE::TESObjectREFR* a_ref) {
 
     for (auto& [formIDs, nodePtr] : baseMeshesAndNiNodeToAttach) {
         if (std::find(formIDs.begin(), formIDs.end(), baseFormID) != formIDs.end()) {
-            // Found the group containing this reference
+            // the map says its a mesh that needs light from the template
             AttachNodeToReference(a_ref, nodePtr.get());
             break;
         }
 
         auto player = RE::PlayerCharacter::GetSingleton();
         if (!player) return;
-
+            // change fires based on location
         RE::BGSLocation* currentLocation = player->GetCurrentLocation();
         if (!currentLocation) return;
 
@@ -282,7 +273,7 @@ inline void ProcessReference(RE::TESObjectREFR* a_ref) {
 
             auto foundModel = ModelsAndOriginalFilePaths.find(bm);
 
-            if (foundModel == ModelsAndOriginalFilePaths.end()) {  // no duplicates
+            if (foundModel == ModelsAndOriginalFilePaths.end()) { // no duplicates
                 ModelsAndOriginalFilePaths[bm] = originalModelPath;
             }
 
@@ -298,7 +289,7 @@ inline void splitString(const std::string& input, char delimter, std::vector<std
 
     while (std::getline(ss, item, delimter)) {
         while (!item.empty() && std::isspace(item.front())) {
-            item.erase(item.begin());  // begin() =  (position)  front() = (value) erase takes a pos
+            item.erase(item.begin());  // begin() =  (position)  front() = (value) erase takes a pos i dident know this
         }
 
         while (!item.empty() && std::isspace(item.back())) {
