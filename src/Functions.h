@@ -9,19 +9,9 @@
 
 namespace logger = SKSE::log;
 
-/*inline void SetupLog() {
-    auto logsFolder = SKSE::log::log_directory();
-    if (!logsFolder) SKSE::stl::report_and_fail("SKSE log_directory not provided, logs disabled.");
-    auto pluginName = SKSE::PluginDeclaration::GetSingleton()->GetName();
-    auto logFilePath = *logsFolder / std::format("{}.log", pluginName);
-    auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath.string(), true);
-    auto loggerPtr = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
-    spdlog::set_default_logger(std::move(loggerPtr));
-    spdlog::set_level(spdlog::level::trace);
-    spdlog::flush_on(spdlog::level::trace);
-} */
 
  inline void Initialize() {
+     logger::info("loading forms");
     auto dataHandler = RE::TESDataHandler::GetSingleton(); // single instance
 
     keywordForswornCamp = dataHandler->LookupForm<RE::BGSKeyword>(0x000130EE, "Skyrim.esm");
@@ -43,6 +33,8 @@ namespace logger = SKSE::log;
     if (!keywordDragonPriestLair) {
         logger::info("BGSKeyword LocTypeDragonPriestLair (0x000130E1) not found");
     }
+
+    
 }
 
  inline RE::NiPointer<RE::NiNode> cloneNiNode(
@@ -113,23 +105,43 @@ RE::NiPointer<RE::NiNode> loaded;
     }
 
 inline void assignClonedNodes() {
+    logger::info("assigning cloned nodes... total groups: {}", baseMeshesAndNiNodeToAttach.size());
+
     std::string prefix = "Meshes\\NEW\\SSE\\";
     int templateFilePathIterator = 0;
 
     for (auto& [formIDs, nodePtr] : baseMeshesAndNiNodeToAttach) {
+        logger::info("Processing group #{} with {} formIDs", templateFilePathIterator, formIDs.size());
+
+        // Print the formIDs in this group
+        for (auto id : formIDs) {
+            logger::info("  -> formID: {:08X}", id);
+        }
+
         if (templateFilePathIterator >= templateNames.size()) {
-            logger::warn("Ran out of template names for map entries!");
+            logger::warn("Ran out of template names for map entries at index {}", templateFilePathIterator);
             break;
         }
 
         auto templatePath = prefix + templateNames[templateFilePathIterator];
+        logger::info("Loading template path [{}]", templatePath);
+
         auto clonedNode = cloneNiNode(templatePath);
+
+        if (clonedNode) {
+            logger::info("  ✔ Successfully cloned node for [{}], assigning to group #{}", templatePath, templateFilePathIterator);
+        } else {
+            logger::error("  ✖ Failed to clone node for [{}], leaving nodePtr as nullptr", templatePath);
+        }
 
         nodePtr = clonedNode;  // store one copy for the group
 
         templateFilePathIterator++;
     }
+
+    logger::info("Finished assignClonedNodes");
 }
+
 
 // this is only if we need to overwrite 6 bits of memory instead of the default 5.... currently not used.
 
